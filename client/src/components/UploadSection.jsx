@@ -3,6 +3,8 @@ import axios from "axios";
 import ResultCard from "./ResultCard";
 import Loader from "./Loader";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function UploadSection() {
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -23,7 +25,7 @@ function UploadSection() {
     formData.append("resume", file);
 
     const uploadResponse = await axios.post(
-      "http://localhost:5000/upload",
+     `${API_URL}/upload`,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
@@ -36,7 +38,7 @@ function UploadSection() {
 
     // 2. Send for matching
     const matchResponse = await axios.post(
-      "http://localhost:5000/match",
+       `${API_URL}/match`,
       {
         resumeText,
         jobDescription,

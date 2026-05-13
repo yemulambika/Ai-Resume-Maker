@@ -3,12 +3,14 @@ const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const pdfjsLib = require("pdfjs-dist"); // standard build
-const { getSemanticScore } = require("./aiMatcher");
 const skillsDatabase = require("./skills");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:3000",
+    "https://your-vercel-app.vercel.app"]
+}));
 app.use(express.json());
 
 const upload = multer({ dest: "uploads/" });
@@ -69,6 +71,7 @@ app.post("/upload", upload.single("resume"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
 
     const text = await extractPdfText(req.file.path);
+    fs.unlinkSync(req.file.path);
 
 
     res.json({ text });
@@ -78,10 +81,6 @@ app.post("/upload", upload.single("resume"), async (req, res) => {
   }
 });
 
-function extractSkills(text) {
-  const skills = ["react","node","mongodb","express","javascript","python","sql","aws","docker","redux"];
-  return skills.filter(skill => text.toLowerCase().includes(skill));
-}
 function generateExplanation(score, matched, missing) {
   if (score >= 80) {
     return [
@@ -166,13 +165,6 @@ function getScore(resumeText, jdText) {
     missing,
   };
 }
-function extractKeywords(text) {
-  const stopwords = ["the","and","with","to","for","of","in","on","at","by","an","a"];
-  return text
-    .toLowerCase()
-    .split(/[^a-zA-Z]+/) // split by non-letters
-    .filter(word => word.length > 2 && !stopwords.includes(word));
-}
 app.post("/match", async (req, res) => {
   const { resumeText, jobDescription } = req.body;
 
@@ -207,6 +199,8 @@ console.log("FINAL RESPONSE:", {
     suggestions: generateSuggestions(result.missing),
   });
 });
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
